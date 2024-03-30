@@ -27,17 +27,25 @@ def get_default_gateway():
     default_gateway = gateways['default'][ni.AF_INET][0]
     return default_gateway
 
-def visualize_network(devices, default_gateway):
+def visualize_network(devices, default_gateway, working_station):
     G = nx.Graph()
 
-    # Add default gateway 
-    default_gateway_label = f"Default Gateway\n({default_gateway})"
-    G.add_node(default_gateway_label, mac="Default Gateway")
+    # Add the current working machine
+    working_station_label =  f"Working Station \n({working_station})"
+    G.add_node(working_station_label, mac="Working Station")
 
     for device in devices:
-        G.add_node(device['ip'], mac=device['mac'])
-        # Connect devices to the default gateway to ensure it's placed centrally
-        G.add_edge(default_gateway_label, device['ip'])
+        if device['ip'] == default_gateway:
+            gateway_label = f"Default Gateway \n({device['ip']})"
+            G.add_node(gateway_label, mac=device['mac'])
+            # Use the gateway label for connection to ensure it matches the node
+            G.add_edge(working_station_label, gateway_label)
+        else:
+            device_label = device['ip']
+            G.add_node(device_label, mac=device['mac'])
+            # Connect the device to the working station
+            G.add_edge(working_station_label, device_label)
+
 
     positions = nx.spring_layout(G)
 
@@ -49,6 +57,8 @@ def visualize_network(devices, default_gateway):
     plt.title("Home Network Map")
     plt.axis('off')  # Turn off the axis
     plt.show()
+
+
 
 if __name__ == "__main__":
     default_gateway = get_default_gateway()
@@ -63,4 +73,4 @@ if __name__ == "__main__":
     # print(arp_table)
     
     # visualize the network
-    visualize_network(devices, default_gateway)
+    visualize_network(devices, default_gateway, '192.168.1.184')
